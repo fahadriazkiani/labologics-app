@@ -2,18 +2,18 @@
 
 import { useRef, useState } from "react";
 import { toBlob } from "html-to-image";
-import { useAuth } from "@/components/AuthProvider";
-import ShareCard from "@/components/ShareCard";
-import { formatMarkdown, stripMarkdown } from "@/lib/formatMarkdown";
-import { ACCEPTED_MIME_TYPES, MAX_FILE_BYTES } from "@/lib/gemini";
+import { useAuth } from "../AuthProvider";
+import ShareCard from "../ShareCard";
+import { formatMarkdown, stripMarkdown } from "../../lib/formatMarkdown";
+import { ACCEPTED_MIME_TYPES, MAX_FILE_BYTES } from "../../lib/gemini";
 import {
   guessTitleAndLab,
   insertSupabaseReport,
   saveGuestReport,
   uploadReportImage,
-} from "@/lib/reports";
-import { downloadBlob, shareViaWhatsApp } from "@/lib/share";
-import type { Language, SavedReport } from "@/lib/types";
+} from "../../lib/reports";
+import { downloadBlob, shareViaWhatsApp } from "../../lib/share";
+import type { Language, SavedReport } from "../../lib/types";
 
 interface InterpreterScreenProps {
   onReportSaved?: (report: SavedReport) => void;
