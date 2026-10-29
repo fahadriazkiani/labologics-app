@@ -1,20 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AuthProvider, useAuth } from "@/components/AuthProvider";
-import BottomNav from "@/components/BottomNav";
-import Header from "@/components/Header";
-import HomeScreen from "@/components/screens/HomeScreen";
-import InfoScreen from "@/components/screens/InfoScreen";
-import InterpreterScreen from "@/components/screens/InterpreterScreen";
-import ProfileScreen from "@/components/screens/ProfileScreen";
-import TestsScreen from "@/components/screens/TestsScreen";
-import { formatMarkdown } from "@/lib/formatMarkdown";
+import { AuthProvider, useAuth } from "../components/AuthProvider";
+import BottomNav from "../components/BottomNav";
+import Header from "../components/Header";
+import HomeScreen from "../components/screens/HomeScreen";
+import InfoScreen from "../components/screens/InfoScreen";
+import InterpreterScreen from "../components/screens/InterpreterScreen";
+import ProfileScreen from "../components/screens/ProfileScreen";
+import TestsScreen from "../components/screens/TestsScreen";
+import { formatMarkdown } from "../lib/formatMarkdown";
 import {
   loadGuestReports,
   loadSupabaseReports,
-} from "@/lib/reports";
-import type { SavedReport, TabId } from "@/lib/types";
+} from "../lib/reports";
+import type { SavedReport, TabId } from "../lib/types";
 
 function AppShell() {
   const { user, configured, displayName } = useAuth();
