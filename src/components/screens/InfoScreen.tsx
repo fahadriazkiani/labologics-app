@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ARTICLES } from "@/lib/articles";
+import { ARTICLES } from "../../lib/articles";
 
 /** Health Insights — screen-blogs from labologics-preview.html, expanded. */
 export default function InfoScreen() {
