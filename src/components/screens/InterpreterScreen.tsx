@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { toBlob } from "html-to-image";
-import { AuthProvider } from "../AuthProvider";
+import { AuthProvider } from "../AuthProvider"
 import ShareCard from "../ShareCard";
 import { formatMarkdown, stripMarkdown } from "../../lib/formatMarkdown";
 import { ACCEPTED_MIME_TYPES, MAX_FILE_BYTES } from "../../lib/gemini";
