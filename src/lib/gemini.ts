@@ -1,3 +1,5 @@
+export const ACCEPTED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+export const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB
 export async function generateWithGemini(prompt: string, imageBase64?: string, mimeType: string = "image/jpeg") {
   const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
   const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
