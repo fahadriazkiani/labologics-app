@@ -1,36 +1,33 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { analyzeWithGemini } from '@/lib/gemini';
+import { NextRequest, NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: NextRequest) {
   try {
-    let imageBase64: string | null = null;
+    const formData = await req.formData();
+    const file = formData.get("report") as File;
 
-    const contentType = req.headers.get('content-type') || '';
-
-    if (contentType.includes('application/json')) {
-      const body = await req.json();
-      imageBase64 = body.image || body.file || body.imageBase64 || body.base64 || null;
-      if (imageBase64 && imageBase64.includes(',')) {
-        imageBase64 = imageBase64.split(',')[1];
-      }
-    } else {
-      const formData = await req.formData();
-      const file = (formData.get('image') || formData.get('file')) as File;
-      if (file && file instanceof File) {
-        const buffer = Buffer.from(await file.arrayBuffer());
-        imageBase64 = buffer.toString('base64');
-      }
+    if (!file) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (!imageBase64) {
-      return NextResponse.json({ error: 'No image received on server' }, { status: 400 });
-    }
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-    const result = await analyzeWithGemini(imageBase64);
-    return NextResponse.json(result);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const prompt = `You are an expert medical laboratory scientist in Pakistan. Analyze this lab report (likely from IDC, Chughtai, or Aga Khan). Identify abnormal biomarkers, explain them simply in a mix of English and Roman Urdu, and provide a structured summary.`;
 
-  } catch (e: any) {
-    console.error('Analyze error:', e);
-    return NextResponse.json({ error: e.message || 'Analysis failed' }, { status: 500 });
+    const imageParts = [{
+      inlineData: { data: buffer.toString("base64"), mimeType: file.type },
+    }];
+
+    const result = await model.generateContent([prompt, ...imageParts]);
+    const text = await result.response.text();
+
+    return NextResponse.json({ interpretation: text });
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    return NextResponse.json({ error: "Failed to process report" }, { status: 500 });
   }
 }
