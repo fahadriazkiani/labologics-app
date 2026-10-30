@@ -3,9 +3,16 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const { prompt, image, mimeType } = await req.json();
-    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
     
-    const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
+    if (!image) {
+        return NextResponse.json({ error: "No image received on server" }, { status: 400 });
+    }
+
+    // Strip data:image/jpeg;base64, prefix if present
+    const cleanBase64 = image.includes(",") ? image.split(",")[1] : image;
+
+    const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
     let lastError = "";
 
     for (const model of models) {
@@ -14,8 +21,13 @@ export async function POST(req: Request) {
         const body = {
           contents: [{
             parts: [
-              { text: prompt || "Analyze this lab report" },
-              ...(image ? [{ inline_data: { mime_type: mimeType || "image/jpeg", data: image } }] : [])
+              { text: prompt || "Analyze this lab report in detail. Extract all tests, values, reference ranges and explain what they mean in simple language." },
+              { 
+                inlineData: {  // <-- FIX 1: camelCase
+                  mimeType: mimeType || "image/jpeg", // <-- FIX 2: camelCase
+                  data: cleanBase64 
+                } 
+              }
             ]
           }]
         };
@@ -33,7 +45,8 @@ export async function POST(req: Request) {
           return NextResponse.json({ text, modelUsed: model });
         }
         if (data.error) {
-          lastError = data.error.message;
+          lastError = JSON.stringify(data.error);
+          console.log("Model", model, "error:", data.error);
           continue;
         }
       } catch (e: any) {
