@@ -1,53 +1,40 @@
-export const ACCEPTED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-export const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export async function generateWithGemini(prompt: string, imageBase64?: string, mimeType: string = "image/jpeg") {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
-  
-  if (!apiKey) throw new Error("GEMINI_API_KEY missing");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-  // Clean base64 prefix if present
-  const cleanBase64 = imageBase64?.includes(",") ? imageBase64.split(",")[1] : imageBase64;
+export async function analyzeWithGemini(imageBase64: string) {
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
-
-  for (const model of models) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      
-      const parts: any[] = [{ text: prompt }];
-      
-      if (cleanBase64) {
-        parts.push({
-          inlineData: {  // FIXED: camelCase
-            mimeType: mimeType, // FIXED: camelCase
-            data: cleanBase64
-          }
-        });
-      }
-
-      const body = {
-        contents: [{ parts }]
-      };
-      
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      
-      const data = await res.json();
-      
-      if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        return data.candidates[0].content.parts[0].text;
-      }
-      if (data.error) {
-        console.log(`Model ${model} failed:`, data.error.message);
-        continue;
-      }
-    } catch (e) {
-      continue;
-    }
+  const prompt = `
+  You are a medical lab report OCR expert. 
+  Extract all tests from this lab report image.
+  Return ONLY valid JSON in this format:
+  {
+    "tests": [
+      {"name": "Haemoglobin", "value": "12.2", "unit": "g/dL", "reference": "13-17", "status": "low"},
+      {"name": "WBC", "value": "8000", "unit": "/cmm", "reference": "4000-11000", "status": "normal"}
+    ]
   }
-  throw new Error("All Gemini models failed");
+  If reference range not visible, leave empty.
+  Set status as low/high/normal based on reference.
+  `;
+
+  const result = await model.generateContent([
+    { text: prompt },
+    {
+      inlineData: {
+        data: imageBase64,
+        mimeType: "image/jpeg",
+      },
+    },
+  ]);
+
+  const text = result.response.text();
+  // Clean ```json blocks
+  const cleaned = text.replace(/```json|```/g, "").trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    return { raw: text };
+  }
 }
