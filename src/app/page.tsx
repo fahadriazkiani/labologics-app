@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { motion } from "framer-motion";
 
@@ -43,9 +44,10 @@ export default function LabologicsHome() {
 
         {/* Drag Drop Card - Interactive */}
         <motion.div 
-          onDragOver={() => setDragActive(true)}
+          onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
           onDragLeave={() => setDragActive(false)}
-          className={`relative border-2 border-dashed rounded-[24px] p-8 bg-white shadow-xl transition-all ${dragActive ? 'border-black scale-105' : 'border-zinc-200'}`}
+          onDrop={(e) => { e.preventDefault(); setDragActive(false); }}
+          className={`relative border-2 border-dashed rounded-[24px] p-8 bg-white shadow-xl transition-all duration-300 ${dragActive ? 'border-black scale-105' : 'border-zinc-200'}`}
         >
           <div className="text-center">
             <div className="w-16 h-16 bg-zinc-100 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-4">📄</div>
@@ -74,7 +76,7 @@ export default function LabologicsHome() {
           </div>
           <div className="bg-zinc-900 p-6 rounded-2xl">
             <h3 className="font-semibold mb-2">🗣️ Urdu Voice</h3>
-            <p className="text-sm text-zinc-400">Press play, get result in Urdu voice — for elders who can't read English.</p>
+            <p className="text-sm text-zinc-400">Press play, get result in Urdu voice — for elders who can&apos;t read English.</p>
           </div>
         </div>
       </section>
