@@ -1,27 +1,34 @@
 export const ACCEPTED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 export const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB
+
 export async function generateWithGemini(prompt: string, imageBase64?: string, mimeType: string = "image/jpeg") {
   const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
-  const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
   
+  if (!apiKey) throw new Error("GEMINI_API_KEY missing");
+
+  // Clean base64 prefix if present
+  const cleanBase64 = imageBase64?.includes(",") ? imageBase64.split(",")[1] : imageBase64;
+
+  const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
+
   for (const model of models) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      const body: any = {
-        contents: [{
-          parts: [
-            { text: prompt },
-            ...(imageBase64 ? [{ inline_data: { mime_type: mimeType, data: imageBase64 } }] : [])
-          ]
-        }]
-      };
-      // Fix for inlineData format
-      if (imageBase64) {
-        body.contents[0].parts = [
-          { text: prompt },
-          { inline_data: { mime_type: mimeType, data: imageBase64 } }
-        ];
+      
+      const parts: any[] = [{ text: prompt }];
+      
+      if (cleanBase64) {
+        parts.push({
+          inlineData: {  // FIXED: camelCase
+            mimeType: mimeType, // FIXED: camelCase
+            data: cleanBase64
+          }
+        });
       }
+
+      const body = {
+        contents: [{ parts }]
+      };
       
       const res = await fetch(url, {
         method: "POST",
@@ -30,10 +37,14 @@ export async function generateWithGemini(prompt: string, imageBase64?: string, m
       });
       
       const data = await res.json();
+      
       if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
         return data.candidates[0].content.parts[0].text;
       }
-      if (data.error) throw new Error(data.error.message);
+      if (data.error) {
+        console.log(`Model ${model} failed:`, data.error.message);
+        continue;
+      }
     } catch (e) {
       continue;
     }
