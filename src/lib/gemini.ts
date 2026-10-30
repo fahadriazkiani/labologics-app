@@ -2,6 +2,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
+export const ACCEPTED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+export const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB
+
 export async function analyzeWithGemini(imageBase64: string) {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -30,7 +33,6 @@ export async function analyzeWithGemini(imageBase64: string) {
   ]);
 
   const text = result.response.text();
-  // Clean ```json blocks
   const cleaned = text.replace(/```json|```/g, "").trim();
   try {
     return JSON.parse(cleaned);
